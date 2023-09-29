@@ -44,7 +44,7 @@ The repository is currently **under development**, so feel free to open an issue
 ## Prerequisites
 In order to run our code, you need to:
 1. install [conda](https://docs.conda.io/en/latest/miniconda.html)
-2. create the `sar-dip-anonymization` environment using the *environment.yml* file
+2. create the `overhead-norm-strategies` environment using the *environment.yml* file
 ```bash
 conda env create -f envinroment.yml
 conda activate overhead-norm-strategies
