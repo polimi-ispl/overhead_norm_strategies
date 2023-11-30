@@ -50,3 +50,12 @@ conda env create -f envinroment.yml
 conda activate overhead-norm-strategies
 ```
 
+## Data
+You can download the dataset from this [link](https://www.dropbox.com/scl/fo/tr3r1ncmc0id58myc0ijf/h?rlkey=w0y5ohnya1t79smpon2w6za8m&dl=0).  
+The dataset is composed of 2 folders:
+1. `pristine_images`: contains the raw full resolution products (`pristine_images/full_res_products`) and the `256x256` patches extracted from them (`pristine_images/patches`);
+2. `spliced_images`: contains the copy-paste images generated from the `pristine_images/patches/test_patches` using the `isplutils/create_spliced_rgb_samples.py` script.
+
+In order to train the model, you first have to divide the dataset into training, validation and test splits.  
+You can do this by running the [`notebook/Training dataset creation.ipynb`](notebooks/Training%20dataset%20creation.ipynb) notebook.
+

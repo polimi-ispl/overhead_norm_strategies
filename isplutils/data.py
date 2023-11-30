@@ -636,37 +636,6 @@ class DBLDataGeneratorFixedPos(Sequence):
 
         return X_batch, Y_batch
 
-
-class UnetDataGenerator(Sequence):
-    """
-        Sequence class for loading Unet training fingerprints
-    """
-
-    def __init__(self, batch_size, df, seed=None):
-        self.df = df
-        self.batch_size = batch_size
-
-    def __len__(self):
-        return int(len(self.df) / self.batch_size)
-
-    def __getitem__(self, idx):
-        idx = (idx * self.batch_size)  # localize the actual sample number among all videos' total number of samples
-
-        # batches creation
-        x = []
-        y = []
-        for batch_idx in range(self.batch_size):
-            tmp = idx + batch_idx
-            path = self.df.iloc[tmp]['fingerprint_path']
-            x.append(np.expand_dims(np.load(path), axis=2))
-            mask_path = self.df.iloc[tmp]['mask_path']
-            y.append(np.expand_dims(cv2.imread(mask_path, cv2.IMREAD_UNCHANGED), axis=2))
-        # Convert to np.array
-        x = np.array(x)
-        y = np.array(y)
-        return [x, y]
-
-
 # Helpers functions #
 
 def load_and_normalize(path: str, use_he: bool = False) -> np.array:
