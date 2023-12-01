@@ -21,7 +21,6 @@ from PIL import Image
 from joblib import load
 import os
 from abc import ABC, abstractmethod
-import imgaug.augmenters as iaa
 import skimage.exposure
 from typing import List
 
@@ -354,24 +353,6 @@ class DBLDataGenerator(Sequence):
         self.input_norm = input_norm
         self.he_norm = he_norm
         self.gray_scale = gray_scale
-        self.p_aug = p_aug
-        if p_aug > 0:
-            # Let's keep contrast augmentation aside for a moment
-            # self.augs = iaa.Sometimes(p_aug, iaa.OneOf([iaa.SigmoidContrast(gain=(5, 20), cutoff=(0.25, 0.75)),
-            #                                             iaa.LogContrast(gain=(0.6, 1.4)),
-            #                                             iaa.LinearContrast((0.4, 1.6))]))
-            # Let's tru adding uniform equalization
-            # self.augs = iaa.Sometimes(p_aug,
-            #                           iaa.Lambda(lambda x, random_state, parents, hooks:
-            #                                      [SatTilesScaler().normalize_product(image, 'uniform_scaling',
-            #                                                                         self.mean_scaling_strategy)
-            #                                       for image in x],
-            #                                      lambda x, random_state, parents, hooks: x))
-            self.augs = iaa.Sometimes(p_aug,
-                                      iaa.Lambda(lambda x, random_state, parents, hooks:
-                                                 [skimage.exposure.equalize_hist(image, nbins=50)
-                                                  for image in x],
-                                                 lambda x, random_state, parents, hooks: x))
 
         # Load the data (first, set the random split for loading the patches)
         self.split_seed = np.random.random_integers(42) if split_seed is None else split_seed
@@ -523,16 +504,6 @@ class DBLDataGeneratorFixedPos(Sequence):
         self.input_norm = input_norm
         self.he_norm = he_norm
         self.gray_scale = gray_scale
-        self.p_aug = p_aug
-        if p_aug > 0:
-            # Let's keep contrast augmentation aside for a moment
-            # self.augs = iaa.Sometimes(p_aug, iaa.OneOf([iaa.SigmoidContrast(gain=(5, 20), cutoff=(0.25, 0.75)),
-            #                                             iaa.LogContrast(gain=(0.6, 1.4)),
-            #                                             iaa.LinearContrast((0.4, 1.6))]))
-            # Let's tru adding uniform equalization
-            self.augs = iaa.Sometimes(p_aug, iaa.Lambda(
-                lambda x: SatTilesScaler().normalize_product(x, 'uniform_scaling', self.mean_scaling_strategy),
-                None))
 
         # Load the data (first, set the random split for loading the patches)
         self.split_seed = np.random.random_integers(42) if split_seed is None else split_seed

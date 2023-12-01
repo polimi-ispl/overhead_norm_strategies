@@ -141,8 +141,6 @@ def main(config: argparse.Namespace):
     norm = config.input_norm
     pos_const = config.pos_const
     output_fp_channels = config.output_fp_channels
-    separable_fp = config.separable_fp
-    depthwise_fp = config.depthwise_fp
 
     # --- Instantiate the DataGenerators --- #
     train_data_generator = DBLDataGenerator(batch_size=train_batch_size, patch_size=patch_size,
@@ -153,8 +151,7 @@ def main(config: argparse.Namespace):
                                             batch_num_tiles_peracq=batch_num_tiles_peracq,
                                             scaler_type=config.scaler_type,
                                             mean_scaling_strategy=config.mean_robust_scaling,
-                                            input_norm=norm,
-                                            p_aug=config.p_aug)
+                                            input_norm=norm)
     valid_data_generator = DBLDataGenerator(batch_size=train_batch_size, patch_size=patch_size,
                                             data_dir=config.val_dir, split_seed=config.split_seed,
                                             num_iteration=config.num_iteration,
@@ -163,8 +160,7 @@ def main(config: argparse.Namespace):
                                             batch_num_tiles_peracq=batch_num_tiles_peracq,
                                             scaler_type=config.scaler_type,
                                             mean_scaling_strategy=config.mean_robust_scaling,
-                                            input_norm=norm,
-                                            p_aug=config.p_aug)
+                                            input_norm=norm)
 
     # --- TRAINING --- #
     print('Starting training')
@@ -223,8 +219,7 @@ if __name__ == '__main__':
     parser.add_argument('--scaler_type', type=str, help='Choose the scaler for the data. Choices are: '
                                                         '99th percentile robust scaler;'
                                                         '95th percentile robust scaler;'
-                                                        'Maximum scaling using each band statistics;'
-                                                        'input norm scaling with histogram equalization.',
+                                                        'Maximum scaling using each band statistics.',
                         default='99th_percentile', choices=['99th_percentile', '95th_percentile', 'sat_max',
                                                             'sat_tiles_scaler'])
     parser.add_argument('--mean_robust_scaling', action='store_true',
