@@ -20,14 +20,13 @@ from sklearn.metrics import roc_curve, auc
 import keras
 import os
 import sys
-from isplutils.network import generate_fingerprint_extractor, generate_separable_fingerprint_extractor, generate_depthwise_fingerprint_extractor
+from isplutils.network import generate_separable_fingerprint_extractor
 from isplutils.data import Scaler, SatTilesScaler, SatProductRobustScaler, SatProductMaxScaler
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 from tqdm import tqdm
 import argparse
 from multiprocessing import cpu_count
-from isplutils.slack import ISPLSlack
 from numba import cuda
 from joblib import load
 import rasterio
@@ -35,28 +34,27 @@ import cv2
 
 
 # Helper functions and classes
-def get_input_scaler(fe_path: str, data_df: pd.DataFrame, preprocesser_dir: str) -> pd.DataFrame:
+def get_input_scaler(fe_tag: str, data_df: pd.DataFrame, preprocesser_dir: str) -> pd.DataFrame:
     """
     Find and load the type of scaler from the model path
     """
-    scaler_type = f"{fe_path.split('scaler-')[-1].split('_')[0]}_{fe_path.split('scaler-')[-1].split('_')[1]}"
-    data_df['mean_scaling'] = bool(fe_path.split('mean_scaling-')[-1].split('_')[0])
-    if scaler_type == 'sat_tiles':
-        data_df['target_scaler'] = f"{fe_path.split('input_norm-')[-1].split('_')[0]}_{fe_path.split('input_norm-')[-1].split('_')[1]}"
-    elif scaler_type == 'sat':
-        data_df['target_scaler'] = data_df['target_satellite'].apply(lambda x: os.path.join(preprocesser_dir, x,
-                                                                                            'SatProductMaxScaler.joblib'))
-    else:
-        percentile_num = fe_path.split('scaler-')[-1].split('_')[0][:2]
+    if 'MinPMax' in fe_tag:
+        percentile_num = fe_tag.split('MinPMax')[-1].split('_')[1]
         data_df['target_scaler'] = data_df['target_satellite'].apply(
             lambda x: os.path.join(preprocesser_dir, x, f'{percentile_num}_SatProductRobustScaler.joblib'))
+    elif fe_tag == 'MaxScaling':
+        data_df['target_scaler'] = 'max_scaling'
+    else:
+        data_df['target_scaler'] = 'uniform_scaling'
+
     return data_df
 
 
 def main(args: argparse.Namespace) -> None:
 
     # -- Load the DataFrame with the info on the test set -- #
-    spliced_df = pd.read_pickle(args.root_dir)
+    root_dir = args.root_dir
+    spliced_df = pd.read_csv(os.path.join(root_dir, 'all_ops_df.csv'))
 
     # -- Load the fingerprint extractor -- #
     fe_path = args.fe_path
@@ -111,21 +109,21 @@ def main(args: argparse.Namespace) -> None:
     # Compute the fingerprints first, so we can free up the GPU memory when not needed
     for i, r in tqdm(results_df.iterrows()):
         # Load and normalize test image
-        with rasterio.open(r['img_path'], 'r') as src:
+        with rasterio.open(os.path.join(root_dir, r['img_path']), 'r') as src:
             img = src.read()
         if 'SatProduct' in r['target_scaler']:
             if not args.unknown_target:
-                img = fp_scalers[r['target_satellite']].normalize_product(img, r['mean_scaling'])
+                img = fp_scalers[r['target_satellite']].normalize_product(img, True)
             else:
-                img = fp_scalers[r['target_satellite']].normalize_unknown_product(img, r['mean_scaling'])
+                img = fp_scalers[r['target_satellite']].normalize_unknown_product(img, True)
         else:
-            img = fp_scalers[scaler_path].normalize_product(img, scaler_path, r['mean_scaling'])
+            img = fp_scalers[scaler_path].normalize_product(img, scaler_path, True)
 
         # Compute the fingerprint
         fp = fe.predict(img[np.newaxis, :, :, :])
 
         # Load the GT mask
-        mask = cv2.imread(r['mask_path'], cv2.IMREAD_UNCHANGED)
+        mask = cv2.imread(os.path.join(root_dir, r['mask_path']), cv2.IMREAD_UNCHANGED)
 
         # Compute the ROC curves and AUCs
 
@@ -148,9 +146,11 @@ def main(args: argparse.Namespace) -> None:
 
     # -- Save the results DataFrame -- #
     if args.debug:
-        results_df.to_pickle(os.path.join(results_dir, f'results_df_mean_fingerprints-{avg_fp}_DEBUG.pkl'))
+        results_df.to_csv(os.path.join(results_dir, f'results_df_mean_fingerprints_DEBUG.csv'),
+                             index=True, header=True, index_label=False)
     else:
-        results_df.to_pickle(os.path.join(results_dir, f'results_df_mean_fingerprints-{avg_fp}.pkl'))
+        results_df.to_csv(os.path.join(results_dir, f'results_df_mean_fingerprints.pkl'),
+                             index=True, header=True, index_label=False)
 
     return None
 
@@ -162,18 +162,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', type=int, help='GPU to use for extracting the fingerprints', default=0)
     parser.add_argument('--fe_path', type=str, help='Path to the model\'s weights',
-                        default='/home/edcannas/projects/rgb_fingerprint_extractor/experiments/models/'
-                                'fingerprint_extractors/train_epochs-500_num_iter-128_lr-0.0001_size-10_num_tiles_peracq'
-                                '-200_split_seed-42_batch_num_tiles-10_num_pos-6_scaler-sat_tiles_scaler_input_norm-max_'
-                                'scaling_mean_scaling-True_weight_reg-0_pos_const-False_suffix-None_p_aug-0.0/'
-                                'model_weights.h5')
+                        default='models/MinPMax_99/model_weights.h5')
     parser.add_argument('--root_dir', type=str, help='Path to the directory with the test samples',
-                        default='/home/edcannas/projects/rgb_fingerprint_extractor/data/spliced_images/'
-                                'copy-paste_blend-False_input_norm-max_same_bit_depth-True/all_ops_df.pkl')
+                        default='data/spliced_images/hegd')
     parser.add_argument('--results_dir', type=str, help='Directory where to story the results',
-                        default='/home/edcannas/projects/rgb_fingerprint_extractor/experiments/splicing_results/auc')
+                        default='splicing_results/auc')
     parser.add_argument('--preprocessing_dir', type=str, help='Directory where all scalers are contained',
-                        default='/home/edcannas/projects/rgb_fingerprint_extractor/data/pristine_images/patches')
+                        default='data/pristine_images/patches')
     parser.add_argument('--unknown_target', action='store_true', help='Whether we know the satellite of the target '
                                                                     'image or not. BEWARE: works only with RobustScalers!')
     parser.add_argument('--slack_user', type=str, help='Slack user to warn on the ISPL workspace', default='edo.cannas')
@@ -183,22 +178,11 @@ if __name__ == '__main__':
 
     # -- Call main -- #
     print('Starting the computation of the multi bands ROC curves...')
-    if config.slack_user:
-        slack_m = ISPLSlack()
     try:
-        if config.slack_user:
-            slack_m.to_user(recipient=config.slack_user, message='RGB-FINGERPRINT-EXTRACTOR: Starting the computation '
-                                                                 'of ROC curves from single fingerprints...')
         main(config)
     except Exception as e:
         print('Something happened! Error is {}'.format(e))
-        if config.slack_user:
-            slack_m.to_user(recipient=config.slack_user, message='RGB-FINGERPRINT-EXTRACTOR: Something happened! Error is {}'.format(e))
     print('Testing done! Bye!')
-    if config.slack_user:
-        slack_m.to_user(recipient=config.slack_user, message='RGB-FINGERPRINT-EXTRACTOR: Computation of '
-                                                             'multi bands ROC curves done! Bye!')
-    #main(config)
 
     # -- Exit -- #
     sys.exit()
