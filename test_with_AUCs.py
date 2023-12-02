@@ -171,7 +171,6 @@ if __name__ == '__main__':
                         default='data/pristine_images/patches')
     parser.add_argument('--unknown_target', action='store_true', help='Whether we know the satellite of the target '
                                                                     'image or not. BEWARE: works only with RobustScalers!')
-    parser.add_argument('--slack_user', type=str, help='Slack user to warn on the ISPL workspace', default='edo.cannas')
     parser.add_argument('--debug', action='store_true', help='Execute in debug mode or not')
 
     config = parser.parse_args()
