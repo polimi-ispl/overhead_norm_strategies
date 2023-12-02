@@ -82,7 +82,7 @@ def main(args: argparse.Namespace) -> None:
     fe_tag = fe_path.split('/')[-2]
 
     # -- Prepare the results dir and results DataFrame -- #
-    results_dir = os.path.join(args.results_dir, args.root_dir.split('/')[-2], fe_tag,
+    results_dir = os.path.join(args.results_dir, args.root_dir.split('/')[-1], fe_tag,
                                f'unknown_satellite-{args.unknown_target}')
     os.makedirs(results_dir, exist_ok=True)
     results_df = spliced_df.copy()
@@ -146,11 +146,9 @@ def main(args: argparse.Namespace) -> None:
 
     # -- Save the results DataFrame -- #
     if args.debug:
-        results_df.to_csv(os.path.join(results_dir, f'results_df_mean_fingerprints_DEBUG.csv'),
-                             index=True, header=True, index_label=False)
+        results_df.to_pickle(os.path.join(results_dir, f'results_df_mean_fingerprints_DEBUG.csv'))
     else:
-        results_df.to_csv(os.path.join(results_dir, f'results_df_mean_fingerprints.pkl'),
-                             index=True, header=True, index_label=False)
+        results_df.to_pickle(os.path.join(results_dir, f'results_df_mean_fingerprints.pkl'))
 
     return None
 
@@ -166,7 +164,7 @@ if __name__ == '__main__':
     parser.add_argument('--root_dir', type=str, help='Path to the directory with the test samples',
                         default='data/spliced_images/hegd')
     parser.add_argument('--results_dir', type=str, help='Directory where to story the results',
-                        default='splicing_results/auc')
+                        default='results')
     parser.add_argument('--preprocessing_dir', type=str, help='Directory where all scalers are contained',
                         default='data/pristine_images/patches')
     parser.add_argument('--unknown_target', action='store_true', help='Whether we know the satellite of the target '
