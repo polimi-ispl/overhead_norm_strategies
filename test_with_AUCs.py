@@ -89,8 +89,6 @@ def main(args: argparse.Namespace) -> None:
     results_df = get_input_scaler(fe_tag, results_df, preprocesser_dir=args.preprocessing_dir)
     # Add results columns to the DataFrame
     results_df['AUC'] = np.nan
-    results_df['fpr'] = ''
-    results_df['tpr'] = ''
 
     # -- Compute everything -- #
 
@@ -113,9 +111,9 @@ def main(args: argparse.Namespace) -> None:
             img = src.read()
         if 'SatProduct' in r['target_scaler']:
             if not args.unknown_target:
-                img = fp_scalers[r['target_satellite']].normalize_product(img, True)
+                img = fp_scalers[r['target_satellite']].normalize_product(img, mean_scaling=True)
             else:
-                img = fp_scalers[r['target_satellite']].normalize_unknown_product(img, True)
+                img = fp_scalers[r['target_satellite']].normalize_unknown_product(img, mean_scaling=True)
         else:
             img = fp_scalers[scaler_path].normalize_product(img, scaler_path, True)
 
@@ -132,10 +130,8 @@ def main(args: argparse.Namespace) -> None:
         # Compute TPR, FPR, AUC
         fpr, tpr, _ = roc_curve(mask[:, :, 0].flatten(), fp.flatten(), pos_label=255)
         auc_score = auc(fpr, tpr)
+        # Save the AUC
         results_df.at[i, 'AUC'] = auc_score if auc_score > 0.5 else 1 - auc_score
-        # Save the fpr, tpr
-        results_df.at[i, 'fpr'] = [fpr.tolist()]
-        results_df.at[i, 'tpr'] = [tpr.tolist()]
 
     # Release memory
     # keras.backend.clear_session()
@@ -175,10 +171,10 @@ if __name__ == '__main__':
 
     # -- Call main -- #
     print('Starting the computation of the multi bands ROC curves...')
-    try:
-        main(config)
-    except Exception as e:
-        print('Something happened! Error is {}'.format(e))
+    #try:
+    main(config)
+    #except Exception as e:
+    #    print('Something happened! Error is {}'.format(e))
     print('Testing done! Bye!')
 
     # -- Exit -- #

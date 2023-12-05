@@ -85,7 +85,7 @@ def generate_separable_fingerprint_extractor(depth: int = 17, first_depthwise_mu
         # what changes with respect to the 1-channel model is the first and last layers
         # we are going to load the 1-channel model, and then set all the weights matching the same shape
         # from the pretrained model
-        model_1channel = generate_depthwise_fingerprint_extractor(image_channels=1, model_path=model_path)
+        model_1channel = generate_separable_fingerprint_extractor(image_channels=1, model_path=model_path)
         weights_list = model_1channel.get_weights().copy()  # get the weights list
         for i, weights in enumerate(weights_list):
             # set the weights not matching the shape as the random initialized ones
