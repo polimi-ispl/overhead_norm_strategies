@@ -1,5 +1,6 @@
 """
  N-dimensional patch extractor created by the Image and Sound Processing Lab (ISPL) - Politecnico di Milano
+ Original repo: https://github.com/polimi-ispl/python_patch_extractor
 @Author: Nicolo' Bonettini
 @Author: Luca Bondi
 @Author: Francesco Picetti

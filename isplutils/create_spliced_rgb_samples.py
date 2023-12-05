@@ -14,6 +14,13 @@ Operations considered (for this script):
 -SigmoidContrast
 -Contrast
 -Identity
+
+Authors:
+Edoardo Daniele Cannas - edoardodaniele.cannas@polimi.it
+Sriram Baireddy - sbairedd@purdue.edu
+Paolo Bestagini - paolo.bestagini@polimi.it
+Stefano Tubaro - stefano.tubaro@polimi.it
+Edward J. Delp - ace@purdue.edu
 """
 
 # Libraries import #
