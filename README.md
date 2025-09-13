@@ -3,7 +3,7 @@
   
 <!-- **Authors:** -->
 
-**_¹ [Edoardo Daniele Cannas](linkedin.com/in/edoardo-daniele-cannas-9a7355146/), ² [Sriram Baireddy](https://www.linkedin.com/in/sbairedd/), ¹ [Paolo Bestagini](https://www.linkedin.com/in/paolo-bestagini-390b461b4/)_**
+**_¹ [Edoardo Daniele Cannas](https://linkedin.com/in/edoardo-daniele-cannas-9a7355146/), ² [Sriram Baireddy](https://www.linkedin.com/in/sbairedd/), ¹ [Paolo Bestagini](https://www.linkedin.com/in/paolo-bestagini-390b461b4/)_**
 
 **_¹ [Stefano Tubaro](https://www.linkedin.com/in/stefano-tubaro-73aa9916/), ² [Edward J. Delp](https://www.linkedin.com/in/ejdelp/)_**
 
